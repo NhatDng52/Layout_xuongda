@@ -262,7 +262,7 @@ document.getElementById("qrOverlay").addEventListener("click", e => {
   if (e.target.id === "qrOverlay") closeQR();
 });
 
-// ==== Smart Panel Positioning ====
+// ==== Smart Panel Positioning Dynamic ====
 let panelZ = 10000;
 document.querySelectorAll('.shelf details').forEach(details => {
   const summary = details.querySelector('summary');
@@ -276,6 +276,8 @@ document.querySelectorAll('.shelf details').forEach(details => {
       }
       return;
     }
+
+    // Đóng tất cả các details khác
     document.querySelectorAll('.shelf details').forEach(d => {
       if (d !== details) {
         d.open = false;
@@ -286,27 +288,38 @@ document.querySelectorAll('.shelf details').forEach(details => {
       }
     });
 
-    const rect = summary.getBoundingClientRect();
+    // Clone panel để floating
     const floating = panel.cloneNode(true);
     floating.classList.add('floating-panel');
     floating.style.position = 'fixed';
     floating.style.display = 'block';
     floating.style.zIndex = ++panelZ;
     floating.style.minWidth = "200px";
+    floating.style.maxWidth = "90vw";
 
+    document.body.appendChild(floating); // cần append để đo kích thước
+
+    const rect = summary.getBoundingClientRect();
+    const panelRect = floating.getBoundingClientRect();
+
+    // Tính top/bottom
     let top = rect.bottom + 4;
-    let left = rect.left;
-    if (top + floating.offsetHeight > window.innerHeight) {
-      top = rect.top - floating.offsetHeight - 4;
+    if (top + panelRect.height > window.innerHeight) {
+      top = rect.top - panelRect.height - 4;
+      if (top < 0) top = 4; // giới hạn trên cùng
     }
-    if (left + floating.offsetWidth > window.innerWidth) {
-      left = rect.right - floating.offsetWidth;
+
+    // Tính left/right
+    let left = rect.left;
+    if (left + panelRect.width > window.innerWidth) {
+      left = rect.right - panelRect.width;
+      if (left < 0) left = 4; // giới hạn bên trái
     }
 
     floating.style.top = top + "px";
     floating.style.left = left + "px";
 
-    // gắn lại QR click
+    // Gắn lại QR click
     floating.querySelectorAll('.qr-placeholder').forEach(qrBtn => {
       qrBtn.addEventListener('click', () => {
         const name = qrBtn.parentElement.querySelector('.item-name').innerText;
@@ -315,17 +328,18 @@ document.querySelectorAll('.shelf details').forEach(details => {
       });
     });
 
-    document.body.appendChild(floating);
     panel.__floating = floating;
   });
 });
 
+// Click ngoài đóng panel
 document.addEventListener('click', e => {
   if (!e.target.closest('details') && !e.target.closest('.floating-panel')) {
     document.querySelectorAll('.shelf details').forEach(d => d.open = false);
     document.querySelectorAll('.floating-panel').forEach(fp => fp.remove());
   }
 });
+
 </script>
 </body>
 </html>
