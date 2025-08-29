@@ -128,15 +128,32 @@
     font-size: 20px;
     color: #333;
   }
-  @keyframes zoomIn {
-    from { transform: scale(0.8); opacity: 0; }
-    to   { transform: scale(1); opacity: 1; }
+  .header h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* khoảng cách giữa logo và tên kho */
+    margin: 0;
+    font-size: 24px;
   }
+
+  .header-logo {
+    height: 32px; /* chiều cao logo */
+    width: auto;  /* giữ tỉ lệ */
+    object-fit: contain;
+  }
+
+@keyframes zoomIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
 </style>
 </head>
 <body>
 <div class="header">
-  <h1>🏪 <%= warehouse_layout.name %></h1>
+  <h1>
+    <img src="/logo.png" alt="Logo Công ty" class="header-logo">
+    <span><%= warehouse_layout.name %></span>
+  </h1>
 </div>
 
 <div class="warehouse">

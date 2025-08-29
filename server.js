@@ -12,7 +12,7 @@ app.set("views", path.join(__dirname, "views"));
 
 // ====== Dữ liệu (copy từ Flask) ======
 const warehouse_layout = {
-  name: "Kho hàng chính",
+  name: "Kho xưởng đá",
   dimensions: { width: 200, height: 290 }
 };
 
