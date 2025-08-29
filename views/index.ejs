@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= warehouse_layout.name %> - Quản lý kho hàng</title>
+<style>
+  body { margin: 0; padding: 0; background: #f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: auto; }
+  .header { background: #2E7D32; color: white; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .header h1 { margin: 0; font-size: 24px; }
+
+  .warehouse {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2.2/1;
+    min-height: 300px;
+    background: white;
+    border: 2px solid #ddd;
+    margin: 2vw auto;
+    border-radius: 8px;
+    max-width: 98vw;
+    height: auto;
+  }
+
+  .shelf { 
+    position: absolute; background: #4CAF50; border: 2px solid #388E3C; 
+    box-sizing: border-box; border-radius: 4px; transition: all 0.3s ease; 
+    min-width: 32px; min-height: 32px; max-width: 100%; max-height: 100%; 
+    z-index: 1;
+  }
+  .shelf:hover { background: #66BB6A; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transform: scale(1.02); }
+
+  .shelf-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    font-size: 14px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .door {
+  position: absolute;
+  background: #8B4513;
+  border: 2px solid #654321;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  z-index: 2;
+  overflow: visible;
+}
+
+/* label xoay 90 độ, căn giữa */
+.door-label {
+  writing-mode: vertical-rl;
+  transform: rotate(-90deg); /* đảo chiều cho đúng hướng đọc nếu cần */
+  font-size: clamp(10px, 1.2vw, 14px);
+  color: white;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+  .panel {
+    position: absolute;
+    min-width: 200px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    display: none;
+  }
+  .panel-header { font-weight: bold; margin-bottom: 6px; color: #333; }
+
+  .shelf details summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-block;
+    background: #eee;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 14px;
+    color: #333;
+    user-select: none;
+    z-index: 1000;
+  }
+  .shelf details summary:hover { background: #ddd; }
+
+  .drop { position: absolute; z-index: 5; }
+  .drop-top-left { top: 4px; left: 4px; }
+  .drop-top-right { top: 4px; right: 4px; }
+  .drop-bottom-left { bottom: 4px; left: 4px; }
+  .drop-bottom-right { bottom: 4px; right: 4px; }
+
+  /* QR Overlay */
+  .qr-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 200000;
+  }
+  .qr-content {
+    position: relative;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    animation: zoomIn 0.2s ease;
+  }
+  .qr-content img {
+    max-width: 80vw;
+    max-height: 80vh;
+  }
+  .qr-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    cursor: pointer;
+    font-size: 20px;
+    color: #333;
+  }
+  @keyframes zoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🏪 <%= warehouse_layout.name %></h1>
+</div>
+
+<div class="warehouse">
+  <% Object.entries(shelf_positions).forEach(([shelf_id, position]) => { %>
+  <% 
+    let [wRatio, hRatio] = position.ratio.split(":").map(Number);
+    const isHorizontal = wRatio >= hRatio; 
+    const pos1 = "drop-top-left";
+    const pos2 = isHorizontal ? "drop-top-right" : "drop-bottom-left";
+  %>
+
+  <div class="shelf" data-shelf-id="<%= shelf_id %>">
+    <div class="shelf-label"><%= position.label %></div>
+
+    <!-- Dropdown 1 -->
+    <details class="drop <%= pos1 %>">
+      <summary>📦</summary>
+      <div class="panel">
+        <div class="panel-header"><%= position.label %> - <%= (warehouse_data[shelf_id] ? warehouse_data[shelf_id].length : 0) %> sản phẩm</div>
+        <div class="panel-content">
+          <% (warehouse_data[shelf_id] || []).forEach(item => { %>
+            <div class="item-row" data-product-id="<%= item.id %>">
+              <div class="item-info">
+                <div class="item-name"><%= item.name %></div>
+                <div class="item-details">
+                  <span class="quantity">SL: <%= item.quantity %></span>
+                  <span class="category"><%= item.category %></span>
+                </div>
+              </div>
+              <div class="qr-placeholder" onclick="showQR('<%= item.qr %>', '<%= item.name %>')">QR</div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </details>
+
+    <!-- Dropdown 2 -->
+    <details class="drop <%= pos2 %>">
+      <summary>📦</summary>
+      <div class="panel">
+        <div class="panel-header"><%= position.label %> - <%= (warehouse_data[shelf_id] ? warehouse_data[shelf_id].length : 0) %> sản phẩm</div>
+        <div class="panel-content">
+          <% (warehouse_data[shelf_id] || []).forEach(item => { %>
+            <div class="item-row" data-product-id="<%= item.id %>">
+              <div class="item-info">
+                <div class="item-name"><%= item.name %></div>
+                <div class="item-details">
+                  <span class="quantity">SL: <%= item.quantity %></span>
+                  <span class="category"><%= item.category %></span>
+                </div>
+              </div>
+              <div class="qr-placeholder" onclick="showQR('<%= item.qr %>', '<%= item.name %>')">QR</div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <% }) %>
+
+  <!-- Cửa ra vào -->
+  <div class="door" id="warehouseDoor" style="left:55%; bottom:20%; width:20%; height:10%;">
+  <span class="door-label">Cửa vào</span>
+</div>
+
+</div>
+
+<!-- QR Overlay -->
+<div id="qrOverlay" class="qr-overlay">
+  <div class="qr-content">
+    <span class="qr-close" onclick="closeQR()">✖</span>
+    <h2 id="qrTitle"></h2>
+    <img id="qrImage" src="" alt="QR Code">
+  </div>
+</div>
+
+<script>
+// ==== Data từ backend ====
+const warehouseData = <%- JSON.stringify(warehouse_data) %>;
+const shelfPositions = <%- JSON.stringify(shelf_positions) %>;
+
+// ==== Scale Shelves Responsive ====
+function scaleShelves() {
+  const warehouse = document.querySelector('.warehouse');
+  if (!warehouse) return;
+  const realW = warehouse.clientWidth;
+  const realH = warehouse.clientHeight;
+
+  document.querySelectorAll('.shelf').forEach(shelf => {
+    const shelfId = shelf.getAttribute('data-shelf-id');
+    const pos = shelfPositions[shelfId];
+    if (!pos) return;
+
+    let [wRatio, hRatio] = pos.ratio.split(":").map(Number);
+    const base = 0.3 * realW;
+    let w = base;
+    let h = base * (hRatio / wRatio);
+    if (h > realH * 0.5) {
+      h = realH * 0.5;
+      w = h * (wRatio / hRatio);
+    }
+
+    shelf.style.left = (pos.left * 100).toFixed(2) + "%";
+    shelf.style.top = (pos.top * 100).toFixed(2) + "%";
+    shelf.style.width = w + "px";
+    shelf.style.height = h + "px";
+  });
+}
+scaleShelves();
+window.addEventListener('resize', scaleShelves);
+
+// ==== QR Overlay ====
+function showQR(qrPath, productName) {
+  document.getElementById("qrTitle").innerText = "QR cho: " + productName;
+  document.getElementById("qrImage").src = qrPath;
+  document.getElementById("qrOverlay").style.display = "flex";
+}
+function closeQR() {
+  document.getElementById("qrOverlay").style.display = "none";
+}
+document.getElementById("qrOverlay").addEventListener("click", e => {
+  if (e.target.id === "qrOverlay") closeQR();
+});
+
+// ==== Smart Panel Positioning ====
+let panelZ = 10000;
+document.querySelectorAll('.shelf details').forEach(details => {
+  const summary = details.querySelector('summary');
+  const panel = details.querySelector('.panel');
+
+  details.addEventListener('toggle', () => {
+    if (!details.open) {
+      if (panel.__floating) {
+        panel.__floating.remove();
+        panel.__floating = null;
+      }
+      return;
+    }
+    document.querySelectorAll('.shelf details').forEach(d => {
+      if (d !== details) {
+        d.open = false;
+        if (d.querySelector('.panel').__floating) {
+          d.querySelector('.panel').__floating.remove();
+          d.querySelector('.panel').__floating = null;
+        }
+      }
+    });
+
+    const rect = summary.getBoundingClientRect();
+    const floating = panel.cloneNode(true);
+    floating.classList.add('floating-panel');
+    floating.style.position = 'fixed';
+    floating.style.display = 'block';
+    floating.style.zIndex = ++panelZ;
+    floating.style.minWidth = "200px";
+
+    let top = rect.bottom + 4;
+    let left = rect.left;
+    if (top + floating.offsetHeight > window.innerHeight) {
+      top = rect.top - floating.offsetHeight - 4;
+    }
+    if (left + floating.offsetWidth > window.innerWidth) {
+      left = rect.right - floating.offsetWidth;
+    }
+
+    floating.style.top = top + "px";
+    floating.style.left = left + "px";
+
+    // gắn lại QR click
+    floating.querySelectorAll('.qr-placeholder').forEach(qrBtn => {
+      qrBtn.addEventListener('click', () => {
+        const name = qrBtn.parentElement.querySelector('.item-name').innerText;
+        const qr = qrBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
+        showQR(qr, name);
+      });
+    });
+
+    document.body.appendChild(floating);
+    panel.__floating = floating;
+  });
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('details') && !e.target.closest('.floating-panel')) {
+    document.querySelectorAll('.shelf details').forEach(d => d.open = false);
+    document.querySelectorAll('.floating-panel').forEach(fp => fp.remove());
+  }
+});
+</script>
+</body>
+</html>

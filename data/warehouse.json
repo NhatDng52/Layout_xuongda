@@ -1,0 +1,31 @@
+{
+  "warehouse_layout": { "name": "Kho hàng chính", "dimensions": { "width": 200, "height": 290 } },
+  "shelf_positions": {
+    "shelf_1": { "left": 0.18, "top": 0.2, "ratio": "25:150", "label": "Kệ D1" },
+    "shelf_2": { "left": 0.2, "top": 0.1, "ratio": "200:25", "label": "Kệ N1" },
+    "shelf_3": { "left": 0.52, "top": 0.1, "ratio": "200:25", "label": "Kệ N2" },
+    "shelf_4": { "left": 0.2, "top": 0.7, "ratio": "200:25", "label": "Kệ D2" },
+    "shelf_5": { "left": 0.3, "top": 0.4, "ratio": "200:25", "label": "Kệ D3" },
+    "shelf_6": { "left": 0.8, "top": 0.2, "ratio": "25:150", "label": "Kệ D4" }
+  },
+  "warehouse_data": {
+    "shelf_1": [
+      { "id": 1, "name": "Máy tính Dell XPS", "qr": "qr1.png", "quantity": 15, "category": "Electronics" }
+    ],
+    "shelf_2": [
+      { "id": 5, "name": "Quần jean nam", "qr": "qr5.png", "quantity": 45, "category": "Fashion" }
+    ],
+    "shelf_3": [
+      { "id": 1, "name": "Máy tính Dell XPS", "qr": "qr1.png", "quantity": 15, "category": "Electronics" }
+    ],
+    "shelf_4": [
+      { "id": 5, "name": "Quần jean nam", "qr": "qr5.png", "quantity": 45, "category": "Fashion" }
+    ],
+    "shelf_5": [
+      { "id": 1, "name": "Máy tính Dell XPS", "qr": "qr1.png", "quantity": 15, "category": "Electronics" }
+    ],
+    "shelf_6": [
+      { "id": 5, "name": "Quần jean nam", "qr": "qr5.png", "quantity": 45, "category": "Fashion" }
+    ]
+  }
+}
